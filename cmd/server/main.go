@@ -35,15 +35,15 @@ func main() {
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-            http.Error(w, "Invalid request payload", http.StatusBadRequest)
-            return
-        }
+			http.Error(w, "Invalid request payload", http.StatusBadRequest)
+			return
+		}
 
-        token, err := internal.LoginUser(payload.Username, payload.Password)
-        if err != nil {
-            http.Error(w, err.Error(), http.StatusBadRequest)
-            return
-        }
+		token, err := internal.LoginUser(payload.Username, payload.Password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
 		w.Write([]byte(token))
 	})
