@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -9,18 +10,40 @@ import (
 
 func main() {
 	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		if err := internal.RegisterUser(r.FormValue("username"), r.FormValue("password")); err != nil {
+		var payload struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "Failed to decode payload", http.StatusBadRequest)
+			return
+		}
+
+		if err := internal.RegisterUser(payload.Username, payload.Password); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+
+		w.WriteHeader(http.StatusCreated)
 	})
 
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		token, err := internal.LoginUser(r.FormValue("username"), r.FormValue("password"))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+		var payload struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
 		}
+
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+            http.Error(w, "Invalid request payload", http.StatusBadRequest)
+            return
+        }
+
+        token, err := internal.LoginUser(payload.Username, payload.Password)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusBadRequest)
+            return
+        }
 
 		w.Write([]byte(token))
 	})
